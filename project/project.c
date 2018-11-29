@@ -11,6 +11,7 @@
 char* read_line(int);
 char* read_file(const char*);
 int get_num_of_words(char*);
+char* str_add_char(char*, char, unsigned long);
 
 int main() {
     if(write(STDOUT_FILENO, "Insert input file (for read from standard input enter stdin): ", 63) < 0) {
@@ -34,6 +35,16 @@ int main() {
     return 0;
 }
 
+char* str_add_char(char* str, char c, unsigned long str_size) {
+    str = (char*)realloc(str, str_size);
+    if(str == NULL) {
+        perror("realloc");
+        exit(-1);
+    }
+    str[str_size - 1] = c;
+    return str;
+}
+
 char* read_line(int fd) {
     unsigned long cmdlineSize = 0;
     char *cmdline = 0;
@@ -51,21 +62,11 @@ char* read_line(int fd) {
                 return (char*)"\n";
             }
             cmdlineSize++;
-            cmdline = (char*)realloc(cmdline, cmdlineSize);
-            if(cmdline == NULL) {
-                perror("realloc");
-                exit(-1);
-            }
-            cmdline[cmdlineSize - 1] = '\0';
+            cmdline = str_add_char(cmdline, '\0', cmdlineSize);
             return cmdline;
         } 
         cmdlineSize++;
-        cmdline = (char*)realloc(cmdline, cmdlineSize);
-        if(cmdline == NULL) {
-            perror("realloc");
-            exit(-1);
-        }
-        cmdline[cmdlineSize - 1] = buff[0];
+        cmdline = str_add_char(cmdline, buff[0], cmdlineSize);
     }
     return NULL;
 }
