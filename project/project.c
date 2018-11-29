@@ -88,13 +88,35 @@ char* read_file(const char* file_name) {
     }
 
     char* line = NULL;
+    int open_brackets = 0;
+    int blocks = 0;
 
     while(1) {
         line = read_line(fd);
         if (line == NULL) {
             break;
         }
-        printf("%s", line);
+
+        for (int i = 0; line[i] != '\0'; i++) {
+            if (line[i] == '{') {
+                open_brackets++;
+            } else if (line[i] == '}') {
+                open_brackets--;
+                blocks++;
+                if (open_brackets < 0) {
+                    break;
+                }
+            }
+        }
+    }
+
+    if (open_brackets != 0) {
+        if(write(STDERR_FILENO, "Unclosed blocks!", 17) < 0) {
+            perror("write");
+            exit(-1);
+        }
+    } else {
+        printf("blocks = %d", blocks);
     }
 
     if(close(fd) < 0) {
