@@ -55,19 +55,28 @@ char* read_line(int fd) {
             perror("read");
             exit(-1);
         }
-        if(buff[0] == EOF) {
-            return NULL;
-        } else if(buff[0] == '\n') {
+
+        if(buff[0] == '\n') {
             if (cmdlineSize == 0) {
                 return (char*)"\n";
             }
+
             cmdlineSize++;
             cmdline = str_add_char(cmdline, '\0', cmdlineSize);
+
             return cmdline;
-        } 
-        cmdlineSize++;
-        cmdline = str_add_char(cmdline, buff[0], cmdlineSize);
+        } else {
+            cmdlineSize++;
+            cmdline = str_add_char(cmdline, buff[0], cmdlineSize);
+        }
     }
+
+    if (cmdlineSize != 0) {
+        cmdlineSize++;
+        cmdline = str_add_char(cmdline, '\0', cmdlineSize);
+        return cmdline;
+    }
+
     return NULL;
 }
 
