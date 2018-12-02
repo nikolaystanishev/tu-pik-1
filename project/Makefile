@@ -1,3 +1,3 @@
 all:
-	gcc -o project -Wall -pedantic project.c
+	gcc -o project -Wall -pedantic -lm project.c
 

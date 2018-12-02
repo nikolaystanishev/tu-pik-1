@@ -6,10 +6,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <math.h>
 
 
+int get_file_descriptor(const char*, int, int);
+void write_int(int, int);
 char* read_line(int);
-char* read_file(const char*);
+void process_file(const char*, const char*);
 int get_num_of_words(char*);
 char* str_add_char(char*, char, unsigned long);
 
@@ -31,8 +34,48 @@ int main() {
         exit(0);
     }
 
-    read_file(input_file);
+    process_file(input_file, output_file);
+
+    free(input_file);
+    free(output_file);
     return 0;
+}
+
+int get_file_descriptor(const char* file_name, int mode, int default_fd) {
+    int fd = default_fd;
+
+    if (!((strcmp(file_name, "stdin") == 0) || (strcmp(file_name, "stdout") == 0))) {
+        fd = open(file_name, mode);
+        if(fd < 0) {
+            perror("open");
+            exit(-1);
+        }
+    }
+
+    return fd;
+}
+
+void write_int(int fd, int integer) {
+    int digits_num = (int)log10(integer) + 1;
+
+    char *str_integer = (char*)calloc(digits_num + 1, sizeof(char));
+    if (str_integer == NULL) {
+        perror("calloc");
+        exit(-1);
+    }
+
+    for (int i = digits_num - 1; i >= 0; i--, integer /= 10) {
+        str_integer[i] = (integer % 10) + '0';
+    }
+
+    str_integer[digits_num] = '\0';
+
+    if (write(fd, str_integer, digits_num) < 0) {
+        perror("write");
+        exit(-1);
+    }
+
+    free(str_integer);
 }
 
 char* str_add_char(char* str, char c, unsigned long str_size) {
@@ -58,7 +101,8 @@ char* read_line(int fd) {
 
         if(buff[0] == '\n') {
             if (cmdlineSize == 0) {
-                return (char*)"\n";
+                cmdlineSize++;
+                cmdline = str_add_char(cmdline, '\n', cmdlineSize);
             }
 
             cmdlineSize++;
@@ -80,19 +124,15 @@ char* read_line(int fd) {
     return NULL;
 }
 
-char* read_file(const char* file_name) {
-    int fd = open(file_name, O_RDONLY);
-    if(fd < 0) {
-        perror("open");
-        exit(-1);
-    }
+void process_file(const char* input_file_name, const char* output_file_name) {
+    int in_fd = get_file_descriptor(input_file_name, O_RDONLY, STDIN_FILENO);
+    int out_fd = get_file_descriptor(output_file_name, O_WRONLY, STDOUT_FILENO);
 
-    char* line = NULL;
     int open_brackets = 0;
     int blocks = 0;
 
     while(1) {
-        line = read_line(fd);
+        char *line = read_line(in_fd);
         if (line == NULL) {
             break;
         }
@@ -102,12 +142,14 @@ char* read_file(const char* file_name) {
                 open_brackets++;
             } else if (line[i] == '}') {
                 open_brackets--;
-                blocks++;
                 if (open_brackets < 0) {
                     break;
                 }
+                blocks++;
             }
         }
+
+        free(line);
     }
 
     if (open_brackets != 0) {
@@ -116,12 +158,15 @@ char* read_file(const char* file_name) {
             exit(-1);
         }
     } else {
-        printf("blocks = %d", blocks);
+        if(write(out_fd, "blocks = ", 10) < 0) {
+            perror("write");
+            exit(-1);
+        }
+        write_int(out_fd, blocks);
     }
 
-    if(close(fd) < 0) {
+    if(close(in_fd) < 0) {
         perror("close");
         exit(-1);
     }
-    return line;
 }
