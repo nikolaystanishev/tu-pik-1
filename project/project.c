@@ -16,6 +16,7 @@ void process_file(const char*, const char*);
 int get_num_of_words(char*);
 char* str_add_char(char*, char, unsigned long);
 int find_num_of_needle(char*, char*);
+int is_str_ends_with(char*);
 
 int main() {
     if(write(STDOUT_FILENO, "Insert input file (for read from standard input enter stdin): ", 63) < 0) {
@@ -26,6 +27,14 @@ int main() {
     if(input_file == NULL) {
         exit(0);
     }
+    if(!is_str_ends_with(input_file)) {
+        if(write(STDOUT_FILENO, "Input file must have '.c' extension!", 38) < 0) {
+            perror("write");
+            exit(-1);
+        }
+        exit(-1);
+    }
+
     if(write(STDOUT_FILENO, "Insert output file (for read from standard output enter stdout): ", 66) < 0) {
         perror("write");
         exit(-1);
@@ -39,6 +48,20 @@ int main() {
 
     free(input_file);
     free(output_file);
+
+    return 0;
+}
+
+int is_str_ends_with(char* string) {
+    if (strcmp(string, "stdin") == 0) {
+        return 1;
+    }
+
+    string = strrchr(string, '.');
+    if (string != NULL) {
+        return !(strcmp(string, ".c"));
+    }
+
     return 0;
 }
 
