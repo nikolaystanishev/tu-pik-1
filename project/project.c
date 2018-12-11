@@ -15,6 +15,7 @@ char* read_line(int);
 void process_file(const char*, const char*);
 int get_num_of_words(char*);
 char* str_add_char(char*, char, unsigned long);
+int find_num_of_needle(char*, char*);
 
 int main() {
     if(write(STDOUT_FILENO, "Insert input file (for read from standard input enter stdin): ", 63) < 0) {
@@ -124,18 +125,44 @@ char* read_line(int fd) {
     return NULL;
 }
 
+int find_num_of_needle(char* line, char* needle) {
+    int num_of_needle = 0;
+
+    char* haystack = (char*)calloc(strlen(line) + 1, sizeof(char));
+    if (haystack == NULL) {
+        perror("calloc");
+        exit(-1);
+    }
+    strcpy(haystack, line);
+
+    while(1) {
+        haystack = strstr(haystack, needle);
+        if(haystack == NULL) {
+            break;
+        }
+        num_of_needle++;
+        haystack += strlen(needle);
+    }
+
+    return num_of_needle;
+}
+
 void process_file(const char* input_file_name, const char* output_file_name) {
     int in_fd = get_file_descriptor(input_file_name, O_RDONLY, STDIN_FILENO);
     int out_fd = get_file_descriptor(output_file_name, O_WRONLY, STDOUT_FILENO);
 
     int open_brackets = 0;
     int blocks = 0;
+    int if_num = 0, else_num = 0;
 
     while(1) {
         char *line = read_line(in_fd);
         if (line == NULL) {
             break;
         }
+
+        if_num += find_num_of_needle(line, "if");
+        else_num += find_num_of_needle(line, "else");
 
         for (int i = 0; line[i] != '\0'; i++) {
             if (line[i] == '{') {
@@ -153,7 +180,7 @@ void process_file(const char* input_file_name, const char* output_file_name) {
     }
 
     if (open_brackets != 0) {
-        if(write(STDERR_FILENO, "Unclosed blocks!", 17) < 0) {
+        if(write(out_fd, "Unclosed blocks!", 17) < 0) {
             perror("write");
             exit(-1);
         }
@@ -165,7 +192,38 @@ void process_file(const char* input_file_name, const char* output_file_name) {
         write_int(out_fd, blocks);
     }
 
+    if(write(out_fd, "\n", 2) < 0) {
+        perror("write");
+        exit(-1);
+    }
+
+    if(write(out_fd, "if conditions = ", 17) < 0) {
+        perror("write");
+        exit(-1);
+    }
+    write_int(out_fd, if_num - else_num);
+
+    if(write(out_fd, "\n", 2) < 0) {
+        perror("write");
+        exit(-1);
+    }
+
+    if(write(out_fd, "if/else conditions = ", 22) < 0) {
+        perror("write");
+        exit(-1);
+    }
+    write_int(out_fd, else_num);
+
+    if(write(out_fd, "\n", 2) < 0) {
+        perror("write");
+        exit(-1);
+    }
+
     if(close(in_fd) < 0) {
+        perror("close");
+        exit(-1);
+    }
+    if(close(out_fd) < 0) {
         perror("close");
         exit(-1);
     }
