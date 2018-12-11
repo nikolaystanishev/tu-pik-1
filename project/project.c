@@ -28,7 +28,7 @@ int main() {
         exit(0);
     }
     if(!is_str_ends_with(input_file)) {
-        if(write(STDOUT_FILENO, "Input file must have '.c' extension!", 38) < 0) {
+        if(write(STDOUT_FILENO, "Input file must have '.c' extension!", 37) < 0) {
             perror("write");
             exit(-1);
         }
