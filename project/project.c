@@ -81,6 +81,9 @@ int get_file_descriptor(const char* file_name, int mode, int default_fd) {
 
 void write_int(int fd, int integer) {
     int digits_num = (int)log10(integer) + 1;
+    if (integer == 0) {
+        digits_num = 1;
+    }
 
     char *str_integer = (char*)calloc(digits_num + 1, sizeof(char));
     if (str_integer == NULL) {
