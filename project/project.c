@@ -17,6 +17,8 @@ int get_num_of_words(char*);
 char* str_add_char(char*, char, unsigned long);
 int find_num_of_needle(char*, char*);
 int is_str_ends_with(char*);
+void delete_in_block(char*, char*);
+int delete_in_blocks(char*, int, char*, char*);
 
 int main() {
     if(write(STDOUT_FILENO, "Insert input file (for read from standard input enter stdin): ", 63) < 0) {
@@ -173,6 +175,50 @@ int find_num_of_needle(char* line, char* needle) {
     return num_of_needle;
 }
 
+void delete_in_block(char* start, char* end) {
+    for (int i = 0; (start + i) != end; i++) {
+        start[i] = ' ';
+    }
+}
+
+int delete_in_blocks(char* line, int is_in_block, char* start, char* end) {
+    char* block_start = NULL;
+    char* block_end = NULL;
+
+    if (is_in_block == 1) {
+        block_start = line;
+    }
+    if (is_in_block == 0) {
+        block_start = strstr(line, start);
+        if (block_start == NULL) {
+            return 0;
+        } else {
+            is_in_block = 1;
+            *block_start = ' ';
+        }
+    }
+    if (block_start != NULL) {
+        block_end = strstr(block_start, end);
+        if (block_end == NULL) {
+            block_end = (line + (strlen(line) - 1));
+            is_in_block = 1;
+        } else {
+            if (*(block_end - 1) == '\\') {
+                *block_end = ' ';
+                is_in_block = delete_in_blocks(block_start, 1, start, end);
+            }
+        }
+        if (block_end != NULL) {
+            delete_in_block(block_start, block_end);
+            if (is_in_block == 1) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 void process_file(const char* input_file_name, const char* output_file_name) {
     int in_fd = get_file_descriptor(input_file_name, O_RDONLY, STDIN_FILENO);
     int out_fd = get_file_descriptor(output_file_name, O_WRONLY, STDOUT_FILENO);
@@ -180,11 +226,21 @@ void process_file(const char* input_file_name, const char* output_file_name) {
     int open_brackets = 0;
     int blocks = 0;
     int if_num = 0, else_num = 0;
+    int is_in_string = 0, is_in_comment = 0;
 
     while(1) {
         char *line = read_line(in_fd);
         if (line == NULL) {
             break;
+        }
+
+        is_in_string = delete_in_blocks(line, is_in_string, "\"", "\"");
+        is_in_comment = delete_in_blocks(line, is_in_comment, "/*", "*/");
+
+        char* comment_start = strstr(line, "//");
+        char* comment_end = (line + (strlen(line) - 1));
+        if (comment_start != NULL) {
+            delete_in_block(comment_start, comment_end);
         }
 
         if_num += find_num_of_needle(line, "if");
