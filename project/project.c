@@ -207,6 +207,7 @@ int delete_in_blocks(char* line, int is_in_block, char* start, char* end) {
                 *block_end = ' ';
                 is_in_block = delete_in_blocks(block_start, 1, start, end);
             }
+            is_in_block = 0;
         }
         if (block_end != NULL) {
             delete_in_block(block_start, block_end);
