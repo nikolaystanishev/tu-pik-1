@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <math.h>
-
+#include <Windows.h>
 
 int get_file_descriptor(const char*, int, int);
 void write_int(int, int);
@@ -20,7 +20,8 @@ void delete_in_block(char*, char*);
 int delete_in_blocks(char*, int, char*, char*);
 
 int main() {
-	if (write(STDOUT_FILENO, "Insert input file (for read from standard input enter stdin): ", 63) < 0) {
+	SetConsoleOutputCP(1251);
+	if (write(STDOUT_FILENO, "Въведи име на Входния файл (за четене от стандартния Вход въведи stdin): ", 74) < 0) {
 		perror("write");
 		exit(-1);
 	}
@@ -29,14 +30,14 @@ int main() {
 		exit(0);
 	}
 	if (!is_str_ends_with(input_file)) {
-		if (write(STDOUT_FILENO, "Input file must have '.c' extension!", 37) < 0) {
+		if (write(STDOUT_FILENO, "Входният файл трябва да има разширение '.с'!", 45) < 0) {
 			perror("write");
 			exit(-1);
 		}
 		exit(-1);
 	}
 
-	if (write(STDOUT_FILENO, "Insert output file (for read from standard output enter stdout): ", 66) < 0) {
+	if (write(STDOUT_FILENO, "Въведи име на Изходния файл (за писане на стандартния Изход въведи stdout): ", 77) < 0) {
 		perror("write");
 		exit(-1);
 	}
@@ -227,7 +228,7 @@ int delete_in_blocks(char* line, int is_in_block, char* start, char* end) {
 
 void process_file(const char* input_file_name, const char* output_file_name) {
 	int in_fd = get_file_descriptor(input_file_name, O_RDONLY, STDIN_FILENO);
-	int out_fd = get_file_descriptor(output_file_name, O_WRONLY, STDOUT_FILENO);
+	int out_fd = get_file_descriptor(output_file_name, O_WRONLY | O_CREAT, STDOUT_FILENO);
 
 	int open_brackets = 0;
 	int blocks = 0;
@@ -269,13 +270,13 @@ void process_file(const char* input_file_name, const char* output_file_name) {
 	}
 
 	if (open_brackets != 0) {
-		if (write(out_fd, "Unclosed blocks!", 17) < 0) {
+		if (write(out_fd, "Има незатворени блокове!", 25) < 0) {
 			perror("write");
 			exit(-1);
 		}
 	}
 	else {
-		if (write(out_fd, "blocks = ", 10) < 0) {
+		if (write(out_fd, "брой на блоковете = ", 21) < 0) {
 			perror("write");
 			exit(-1);
 		}
@@ -287,7 +288,7 @@ void process_file(const char* input_file_name, const char* output_file_name) {
 		exit(-1);
 	}
 
-	if (write(out_fd, "if conditions = ", 17) < 0) {
+	if (write(out_fd, "брой на if условията = ", 24) < 0) {
 		perror("write");
 		exit(-1);
 	}
@@ -298,7 +299,7 @@ void process_file(const char* input_file_name, const char* output_file_name) {
 		exit(-1);
 	}
 
-	if (write(out_fd, "if/else conditions = ", 22) < 0) {
+	if (write(out_fd, "брой на if/else условията = ", 29) < 0) {
 		perror("write");
 		exit(-1);
 	}
